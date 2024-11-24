@@ -1,6 +1,6 @@
 # Markowitz Portfolio Optimizer
 
-A command-line tool for portfolio optimization using Modern Portfolio Theory (MPT). Calculate optimal asset allocations and generate efficient frontiers based on historical returns data.
+A tool for portfolio optimization using Modern Portfolio Theory (MPT). Calculate optimal asset allocations and generate efficient frontiers based on historical returns data. Available both as a command-line tool and a web-based GUI.
 
 ## Installation
 
@@ -17,9 +17,25 @@ poetry install
 
 ## Usage
 
-The tool provides two main commands: `optimize` and `efficient_frontier`.
+### Web Interface
 
-### Optimize a Portfolio
+Launch the web-based GUI with:
+
+```bash
+poetry run markowitz gui
+```
+
+This will open a browser window where you can:
+- Upload your returns CSV file
+- Adjust target return using a slider
+- View optimized portfolio weights and metrics
+- Visualize results
+
+### Command Line Interface
+
+The CLI provides two main commands: `optimize` and `efficient_frontier`.
+
+#### Optimize a Portfolio
 
 Find the minimum variance portfolio for a target return:
 
@@ -29,7 +45,7 @@ poetry run markowitz optimize --returns-file sample_returns.csv --target-return 
 
 This will output optimal weights for each asset and portfolio metrics (return and risk).
 
-### Generate Efficient Frontier
+#### Generate Efficient Frontier
 
 View the risk-return tradeoff across different target returns:
 
@@ -51,6 +67,7 @@ A sample data generator script is provided in `scripts/sample-data-generator.py`
 
 ## Features
 
+- Web-based GUI for easy portfolio optimization
 - Portfolio optimization using mean-variance analysis
 - Efficient frontier generation
 - No-short-selling constraint
@@ -64,7 +81,9 @@ A sample data generator script is provided in `scripts/sample-data-generator.py`
 - NumPy
 - Pandas
 - SciPy
+- Gradio (GUI interface)
 - Python Fire (CLI interface)
+- Plotly (visualization)
 
 ## Development
 
