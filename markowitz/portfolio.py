@@ -77,10 +77,6 @@ class MarkowitzPortfolio:
         self._load_data(returns_file)
 
         try:
-            # Convert target_return from percentage to decimal if needed
-            if target_return > 1:
-                target_return = target_return / 100
-
             result = self._optimize_weights(target_return)
 
             print("\nOptimal Portfolio:")
@@ -90,8 +86,9 @@ class MarkowitzPortfolio:
             print(f"Expected Return: {result['return']:.2%}")
             print(f"Volatility: {result['risk']:.2%}")
 
+            return result
         except Exception as e:
-            sys.exit(f"Optimization error: {e}")
+            raise ValueError(f"Optimization error: {str(e)}")
 
     def efficient_frontier(self, returns_file: str, points: int = 50) -> None:
         """Generate and display efficient frontier."""
