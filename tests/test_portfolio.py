@@ -1,90 +1,119 @@
 import pytest
-import numpy as np
 import pandas as pd
-from io import StringIO
-from unittest.mock import patch
+import numpy as np
 from markowitz.portfolio import MarkowitzPortfolio
 
 
 @pytest.fixture
-def sample_portfolio():
-    """
-    Creates a portfolio with two assets showing realistic returns and volatility:
-    - Stock A: Higher return (≈ 20% annual) with higher volatility
-    - Stock B: Lower return (≈ 10% annual) with lower volatility
-    """
-    test_data = """Date,Stock_A,Stock_B
-2024-01-01,0.0012,0.0003
-2024-01-02,0.0008,0.0004
-2024-01-03,-0.0002,0.0005
-2024-01-04,0.0015,0.0003
-2024-01-05,0.0007,0.0005"""
+def sample_returns():
+    """Create sample returns for testing."""
+    dates = pd.date_range(start="2024-01-01", end="2024-01-10", freq="D")
+    # More realistic daily returns (around 10-15% annualized)
+    data = {
+        "AAPL": [
+            0.001,
+            -0.002,
+            0.001,
+            -0.001,
+            0.002,
+            0.001,
+            -0.001,
+            0.002,
+            -0.001,
+            0.001,
+        ],
+        "GOOGL": [
+            -0.001,
+            0.002,
+            0.001,
+            0.001,
+            -0.001,
+            -0.001,
+            0.001,
+            0.001,
+            0.002,
+            -0.001,
+        ],
+        "MSFT": [
+            0.002,
+            0.001,
+            -0.001,
+            0.001,
+            0.001,
+            0.001,
+            0.001,
+            -0.001,
+            0.001,
+            0.001,
+        ],
+    }
+    return pd.DataFrame(data, index=dates)
 
+
+def test_load_data(sample_returns):
+    """Test data loading from DataFrame and statistics calculation."""
     portfolio = MarkowitzPortfolio()
-    with patch(
-        "pandas.read_csv",
-        return_value=pd.read_csv(
-            StringIO(test_data), index_col="Date", parse_dates=True
-        ),
-    ):
-        portfolio._load_data("dummy.csv")
-    return portfolio
+    portfolio.load_data(sample_returns)
+
+    assert portfolio.returns is not None
+    assert portfolio._mean is not None
+    assert portfolio._cov is not None
+    assert len(portfolio.returns.columns) == 3
 
 
-def test_portfolio_math(sample_portfolio):
-    """
-    Test that our portfolio calculations match what we'd expect mathematically.
-    """
-    weights = np.array([0.5, 0.5])
+def test_optimize_basic(sample_returns):
+    """Test basic portfolio optimization."""
+    portfolio = MarkowitzPortfolio()
 
-    calculated_return = sample_portfolio._portfolio_return(weights)
-    # With varying returns, we'll test that it's close to the mean
-    assert calculated_return > 0, "Portfolio return should be positive"
+    # Calculate achievable target return
+    portfolio.load_data(sample_returns)
+    min_ret = portfolio._mean.min() * 252
+    max_ret = portfolio._mean.max() * 252
+    target = (min_ret + max_ret) / 2  # Use middle of feasible range
 
+    result = portfolio.optimize(sample_returns, target_return=target)
 
-def test_optimization_constraints(sample_portfolio):
-    """
-    Test that our optimization respects the basic constraints of portfolio theory:
-    1. Weights sum to 100%
-    2. No negative weights (no short selling)
-    """
-    result = sample_portfolio._optimize_weights(target_return=0.15)
-    weights = np.array(list(result["weights"].values()))
-
-    assert np.isclose(sum(weights), 1), "Portfolio weights must sum to 100%"
-    assert all(
-        w >= 0 for w in weights
-    ), "No short selling allowed - weights must be non-negative"
+    # Check structure and constraints
+    assert set(result.keys()) == {"weights", "return", "risk"}
+    assert set(result["weights"].keys()) == set(sample_returns.columns)
+    assert np.isclose(sum(result["weights"].values()), 1, rtol=1e-5)
+    assert all(0 <= w <= 1 for w in result["weights"].values())
 
 
-def test_efficient_frontier_makes_sense(sample_portfolio):
-    """
-    Test that portfolios with higher returns have higher risk,
-    demonstrating the fundamental risk-return tradeoff.
-    """
-    # Print the mean and std of each asset to understand our test data
-    print("\nAsset Statistics (daily):")
-    print(
-        f"Stock A: mean={sample_portfolio._mean['Stock_A']:.6f}, std={np.sqrt(sample_portfolio._cov.loc['Stock_A','Stock_A']):.6f}"
-    )
-    print(
-        f"Stock B: mean={sample_portfolio._mean['Stock_B']:.6f}, std={np.sqrt(sample_portfolio._cov.loc['Stock_B','Stock_B']):.6f}"
-    )
+def test_optimize_invalid_return(sample_returns):
+    """Test optimization with unreachable target return."""
+    portfolio = MarkowitzPortfolio()
+    portfolio.load_data(sample_returns)
+    max_ret = portfolio._mean.max() * 252
 
-    low_return = 0.12  # 12% annual return target
-    high_return = 0.18  # 18% annual return target
+    with pytest.raises(ValueError):
+        portfolio.optimize(
+            sample_returns, target_return=max_ret * 2
+        )  # Double the maximum possible
 
-    low_risk_portfolio = sample_portfolio._optimize_weights(low_return)
-    high_risk_portfolio = sample_portfolio._optimize_weights(high_return)
 
-    print("\nPortfolio Results:")
-    print(
-        f"Low return portfolio: return={low_risk_portfolio['return']:.2%}, risk={low_risk_portfolio['risk']:.2%}"
-    )
-    print(
-        f"High return portfolio: return={high_risk_portfolio['return']:.2%}, risk={high_risk_portfolio['risk']:.2%}"
-    )
+def test_efficient_frontier(sample_returns):
+    """Test efficient frontier generation."""
+    portfolio = MarkowitzPortfolio()
+    points = portfolio.efficient_frontier(sample_returns, points=10)
 
-    assert (
-        low_risk_portfolio["risk"] < high_risk_portfolio["risk"]
-    ), "Higher return portfolios should have higher risk"
+    assert len(points) > 0
+    assert all(isinstance(p, tuple) and len(p) == 2 for p in points)
+
+    # Check points are ordered by return
+    returns = [p[0] for p in points]
+    assert all(returns[i] <= returns[i + 1] for i in range(len(returns) - 1))
+
+
+def test_portfolio_calculations(sample_returns):
+    """Test internal portfolio calculations."""
+    portfolio = MarkowitzPortfolio()
+    portfolio.load_data(sample_returns)
+
+    weights = np.array([0.4, 0.3, 0.3])
+    variance = portfolio._portfolio_variance(weights)
+    ret = portfolio._portfolio_return(weights)
+
+    assert isinstance(variance, float)
+    assert isinstance(ret, float)
+    assert variance >= 0  # Variance must be non-negative

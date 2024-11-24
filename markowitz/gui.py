@@ -1,67 +1,35 @@
 import gradio as gr
 from .portfolio import MarkowitzPortfolio
-
-# Templates for output messages
-SUCCESS_TEMPLATE = """
-## ✅ Portfolio Optimization Results
-
-### Weights
-{weights}
-
-### Portfolio Metrics (Annualized)
-* **Expected Return**: {return_pct:.1%}
-* **Risk**: {risk_pct:.1%}
-"""
-
-RANGE_ERROR_TEMPLATE = """
-## ⚠️ Optimization Error
-
-{error_msg}
-
-Please adjust your target return to be within the feasible range and try again.
-"""
-
-ERROR_TEMPLATE = """
-## ❌ Error
-
-An unexpected error occurred: {error_msg}
-"""
-
-
-def format_weights(weights):
-    """Format portfolio weights into markdown bullet points"""
-    return "\n".join(
-        f"* **{asset}**: {weight:.1%}" for asset, weight in weights.items()
-    )
+from .formatters import format_portfolio_results
 
 
 def optimize_portfolio(csv_file, target_return):
+    """Process portfolio optimization request from GUI.
+
+    Args:
+        csv_file: Gradio file object containing returns data
+        target_return: Target return percentage (1-100)
+
+    Returns:
+        str: Markdown formatted results or error message
+    """
     portfolio = MarkowitzPortfolio()
-
     try:
-        portfolio._load_data(csv_file.name)
-        result = portfolio._optimize_weights(target_return / 100)
-
-        return SUCCESS_TEMPLATE.format(
-            weights=format_weights(result["weights"]),
-            return_pct=result["return"],
-            risk_pct=result["risk"],
-        )
-
-    except ValueError as e:
-        template = (
-            RANGE_ERROR_TEMPLATE
-            if "feasible range" in str(e).lower()
-            else ERROR_TEMPLATE
-        )
-        return template.format(error_msg=str(e))
+        result = portfolio.optimize(csv_file.name, target_return / 100)
+        return format_portfolio_results(result, markdown=True)
+    except Exception as e:
+        return f"An unexpected error occurred: {str(e)}"
 
 
 def run():
+    """Launch the Gradio interface."""
     interface = gr.Interface(
         fn=optimize_portfolio,
         inputs=[
-            gr.File(label="Upload Returns CSV file"),
+            gr.File(
+                label="Upload Returns CSV file",
+                file_types=[".csv"],  # Added file type restriction
+            ),
             gr.Slider(
                 minimum=1,
                 maximum=100,

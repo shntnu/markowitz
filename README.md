@@ -33,14 +33,14 @@ This will open a browser window where you can:
 
 ### Command Line Interface
 
-The CLI provides two main commands: `optimize` and `efficient_frontier`.
+The CLI provides two main commands: `optimize` and `frontier`.
 
 #### Optimize a Portfolio
 
 Find the minimum variance portfolio for a target return:
 
 ```bash
-poetry run markowitz optimize --returns-file sample_returns.csv --target-return 15
+poetry run markowitz optimize --returns-file sample_returns.csv --target-return .15
 ```
 
 This will output optimal weights for each asset and portfolio metrics (return and risk).
@@ -50,7 +50,7 @@ This will output optimal weights for each asset and portfolio metrics (return an
 View the risk-return tradeoff across different target returns:
 
 ```bash
-poetry run markowitz efficient_frontier --returns-file sample_returns.csv --points 50
+poetry run markowitz frontier --returns-file sample_returns.csv --points 50
 ```
 
 ## Data Format
