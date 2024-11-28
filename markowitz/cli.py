@@ -1,7 +1,7 @@
 import fire
 from .portfolio import MarkowitzPortfolio
 from .gui import run as run_gui
-from .formatters import format_portfolio_results, format_frontier
+from .formatters import format_portfolio_results
 
 
 class CLI:
