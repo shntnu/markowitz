@@ -12,10 +12,6 @@ class CLI:
         result = self.portfolio.optimize(returns_file, target_return)
         print(format_portfolio_results(result))
 
-    def frontier(self, returns_file: str, points: int = 50):
-        ef_points = self.portfolio.efficient_frontier(returns_file, points)
-        print(format_frontier(ef_points))
-
     def gui(self):
         run_gui()
 

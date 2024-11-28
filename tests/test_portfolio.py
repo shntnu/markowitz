@@ -92,19 +92,6 @@ def test_optimize_invalid_return(sample_returns):
         )  # Double the maximum possible
 
 
-def test_efficient_frontier(sample_returns):
-    """Test efficient frontier generation."""
-    portfolio = MarkowitzPortfolio()
-    points = portfolio.efficient_frontier(sample_returns, points=10)
-
-    assert len(points) > 0
-    assert all(isinstance(p, tuple) and len(p) == 2 for p in points)
-
-    # Check points are ordered by return
-    returns = [p[0] for p in points]
-    assert all(returns[i] <= returns[i + 1] for i in range(len(returns) - 1))
-
-
 def test_portfolio_calculations(sample_returns):
     """Test internal portfolio calculations."""
     portfolio = MarkowitzPortfolio()

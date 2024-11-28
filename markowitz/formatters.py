@@ -29,24 +29,3 @@ Portfolio Metrics (Annualized):
 Expected Return: {ret:.2%}
 Volatility: {risk:.2%}
 """
-
-
-def format_frontier(points, markdown=False):
-    """Format efficient frontier points"""
-    if not points:
-        return "No efficient frontier points generated."
-
-    if markdown:
-        points_str = "\n".join(
-            f"* Return: **{ret:.2%}**, Risk: **{risk:.2%}**" for ret, risk in points
-        )
-        return f"""
-## Efficient Frontier Points (Annualized)
-{points_str}
-"""
-    else:
-        output = "\nEfficient Frontier Points (Annualized):\n"
-        output += "Return    Risk\n"
-        output += "-" * 20 + "\n"
-        output += "\n".join(f"{ret:7.2%}  {risk:7.2%}" for ret, risk in points)
-        return output

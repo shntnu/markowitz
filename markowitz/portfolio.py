@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from typing import Dict, Union, List, Tuple
+from typing import Dict, Union
 
 
 class MarkowitzPortfolio:
@@ -108,31 +108,3 @@ class MarkowitzPortfolio:
         """
         self.load_data(returns_data)
         return self._optimize_weights(target_return)
-
-    def efficient_frontier(
-        self, returns_data: Union[str, pd.DataFrame], points: int = 50
-    ) -> List[Tuple[float, float]]:
-        """Generate points along the efficient frontier.
-
-        Args:
-            returns_data (Union[str, pd.DataFrame]): CSV file path or DataFrame with returns data
-            points (int, optional): Number of points to generate. Defaults to 50.
-
-        Returns:
-            List[Tuple[float, float]]: List of (return, risk) tuples along the frontier
-        """
-        self.load_data(returns_data)
-
-        min_ret = self._mean.min() * 252
-        max_ret = self._mean.max() * 252
-        target_returns = np.linspace(min_ret, max_ret, points)
-        ef_points = []
-
-        for target in target_returns:
-            try:
-                result = self._optimize_weights(target)
-                ef_points.append((result["return"], result["risk"]))
-            except ValueError:
-                continue
-
-        return ef_points

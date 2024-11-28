@@ -33,7 +33,7 @@ This will open a browser window where you can:
 
 ### Command Line Interface
 
-The CLI provides two main commands: `optimize` and `frontier`.
+The CLI provides a main command: `optimize`.
 
 #### Optimize a Portfolio
 
@@ -44,14 +44,6 @@ poetry run markowitz optimize --returns-file sample_returns.csv --target-return 
 ```
 
 This will output optimal weights for each asset and portfolio metrics (return and risk).
-
-#### Generate Efficient Frontier
-
-View the risk-return tradeoff across different target returns:
-
-```bash
-poetry run markowitz frontier --returns-file sample_returns.csv --points 50
-```
 
 ## Data Format
 
@@ -69,7 +61,6 @@ A sample data generator script is provided in `scripts/sample-data-generator.py`
 
 - Web-based GUI for easy portfolio optimization
 - Portfolio optimization using mean-variance analysis
-- Efficient frontier generation
 - No-short-selling constraint
 - Annualized risk and return metrics
 - Support for multiple assets
